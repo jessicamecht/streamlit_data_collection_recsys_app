@@ -6,7 +6,28 @@ import random
 import re, requests
 import os, sys
 import time
+from google.oauth2 import service_account
+from gsheetsdb import connect
 
+# Create a connection object.
+credentials = service_account.Credentials.from_service_account_info(
+    st.secrets["gcp_service_account"],
+    scopes=[
+        "https://www.googleapis.com/auth/spreadsheets",
+    ],
+)
+conn = connect(credentials=credentials)
+
+# Perform SQL query on the Google Sheet.
+# Uses st.cache to only rerun when the query changes or after 10 min.
+@st.cache(ttl=600)
+def run_query(query):
+    rows = conn.execute(query, headers=1)
+    rows = rows.fetchall()
+    return rows
+
+sheet_url = st.secrets["private_gsheets_url"]
+rows = run_query(f'SELECT * FROM "{sheet_url}"')
 
 def generate_random_code():
     letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
@@ -16,43 +37,6 @@ def display_thank_you(code):
     st.header("Thanks for contributing to this study.")
     st.write('Please submit the following code to MTurk:')
     st.title(code)
-def download_url(url):
-    opener = urllib.request.FancyURLopener({})
-    f = opener.open(url)
-    content = f.read()
-    return content 
-
-def savePage(url, pagepath='page'):
-    def savenRename(soup, pagefolder, session, url, tag, inner):
-        if not os.path.exists(pagefolder): # create only once
-            os.mkdir(pagefolder)
-        for res in soup.findAll(tag):   # images, css, etc..
-            if res.has_attr(inner): # check inner tag (file object) MUST exists  
-                try:
-                    filename, ext = os.path.splitext(os.path.basename(res[inner])) # get name and extension
-                    filename = re.sub('\W+', '', filename) + ext # clean special chars from name
-                    fileurl = urljoin(url, res.get(inner))
-                    filepath = os.path.join(pagefolder, filename)
-                    # rename html ref so can move html and folder of files anywhere
-                    res[inner] = os.path.join(os.path.basename(pagefolder), filename)
-                    if not os.path.isfile(filepath): # was not downloaded
-                        with open(filepath, 'wb') as file:
-                            filebin = session.get(fileurl)
-                            file.write(filebin.content)
-                except Exception as exc:
-                    print(exc, file=sys.stderr)
-    session = requests.Session()
-    #... whatever other requests config you need here
-    response = session.get(url)
-    soup = BeautifulSoup(response.text, "html.parser")
-    path, _ = os.path.splitext(pagepath)
-    pagefolder = path+'_files' # page contents folder
-    tags_inner = {'img': 'src', 'link': 'href', 'script': 'src'} # tag&inner tags to grab
-    for tag, inner in tags_inner.items(): # saves resource files and rename refs
-        savenRename(soup, pagefolder, session, url, tag, inner)
-    with open(path+'.html', 'wb') as file: # saves modified html doc
-        file.write(soup.prettify('utf-8'))
-    return soup.prettify('utf-8')
 
 def save_data(state):
     last_decisions = np.array(state.last_decisions)
@@ -61,8 +45,11 @@ def save_data(state):
     df = pd.DataFrame(data)
     df['link_clicked'] = [i in state.link_clicked for i in range(len(last_decisions))]
     df['timestamps'] = state.timestamps
+    df['user'] = state.user_code
     df['ratings'] = [i in state.last_decisions for i in range(len(last_decisions))]
-    df.to_csv(f'./review_session_data_{state.genre_selected}_{state.user_code}.csv')
+    for row in rows:
+        st.write(f"{row.name} has a :{row.pet}:")
+    #df.to_csv(f'./review_session_data_{state.genre_selected}_{state.user_code}.csv')
 
 def init_states():
     user_code = generate_random_code()
