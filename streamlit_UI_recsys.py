@@ -6,28 +6,23 @@ import random
 import re, requests
 import os, sys
 import time
-from google.oauth2 import service_account
-from gsheetsdb import connect
+import pygsheets
+gc = pygsheets.authorize(service_file=st.secrets['private_key'])
 
-# Create a connection object.
-credentials = service_account.Credentials.from_service_account_info(
-    st.secrets["gcp_service_account"],
-    scopes=[
-        "https://www.googleapis.com/auth/spreadsheets",
-    ],
-)
-conn = connect(credentials=credentials)
+# Create empty dataframe
+df = pd.DataFrame()
 
-# Perform SQL query on the Google Sheet.
-# Uses st.cache to only rerun when the query changes or after 10 min.
-@st.cache(ttl=600)
-def run_query(query):
-    rows = conn.execute(query, headers=1)
-    rows = rows.fetchall()
-    return rows
+# Create a column
+df['name'] = ['John', 'Steve', 'Sarah']
 
-sheet_url = st.secrets["private_gsheets_url"]
-rows = run_query(f'SELECT * FROM "{sheet_url}"')
+#open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
+sh = gc.open('Study_results_recsys')
+
+#select the first sheet 
+wks = sh[0]
+
+#update the first sheet with df, starting at cell B2. 
+wks.set_dataframe(df,(1,1))
 
 def generate_random_code():
     letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
@@ -47,8 +42,9 @@ def save_data(state):
     df['timestamps'] = state.timestamps
     df['user'] = state.user_code
     df['ratings'] = [i in state.last_decisions for i in range(len(last_decisions))]
-    for row in rows:
-        st.write(f"{row.name} has a :{row.pet}:")
+    
+    sheet_url = st.secrets["private_gsheets_url"]
+    rows = run_query(f'SELECT * FROM "{sheet_url}"')
     #df.to_csv(f'./review_session_data_{state.genre_selected}_{state.user_code}.csv')
 
 def init_states():
