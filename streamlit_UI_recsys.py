@@ -1,19 +1,12 @@
 import streamlit as st
 import numpy as np 
 import pandas as pd 
-import torch
 import webbrowser
-import streamlit.components.v1 as components
 import random
 import re, requests
 import os, sys
 import time
-from urllib.parse import urljoin
-from bs4 import BeautifulSoup
-import urllib.request
 
-
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def generate_random_code():
     letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
