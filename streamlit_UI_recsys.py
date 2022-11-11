@@ -7,22 +7,28 @@ import re, requests
 import os, sys
 import time
 import pygsheets
-gc = pygsheets.authorize(service_file=st.secrets['private_key'])
+import tempfile
+import json
 
-# Create empty dataframe
-df = pd.DataFrame()
+def _google_creds_as_file():
+    temp = tempfile.NamedTemporaryFile()
+    temp.write(json.dumps({
+        "type": st.secrets['type'],
+        "project_id": st.secrets['project_id'],
+        "private_key_id": st.secrets['private_key_id'],
+        "private_key": st.secrets['private_key'],
+        "client_email":st.secrets['client_email'] ,
+        "client_id": st.secrets['client_id'],
+        "auth_uri": st.secrets['auth_uri'],
+        "token_uri": st.secrets['token_uri'],
+        "auth_provider_x509_cert_url": st.secrets['auth_provider_x509_cert_url'],
+        "client_x509_cert_url": st.secrets['client_x509_cert_url']
+    }).encode('utf-8'))
+    temp.flush()
+    return temp
 
-# Create a column
-df['name'] = ['John', 'Steve', 'Sarah']
-
-#open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
-sh = gc.open('Study_results_recsys')
-
-#select the first sheet 
-wks = sh[0]
-
-#update the first sheet with df, starting at cell B2. 
-wks.set_dataframe(df,(1,1))
+creds_file = _google_creds_as_file()
+gc = pygsheets.authorize(service_account_file=creds_file.name)
 
 def generate_random_code():
     letters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ123456789'
@@ -41,10 +47,17 @@ def save_data(state):
     df['link_clicked'] = [i in state.link_clicked for i in range(len(last_decisions))]
     df['timestamps'] = state.timestamps
     df['user'] = state.user_code
-    df['ratings'] = [i in state.last_decisions for i in range(len(last_decisions))]
+    df['ratings'] = state.last_decisions
     
-    sheet_url = st.secrets["private_gsheets_url"]
-    rows = run_query(f'SELECT * FROM "{sheet_url}"')
+    #open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
+    sh = gc.open('Study_results_recsys')
+
+    #select the first sheet 
+    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}"
+    sheet = sh.add_worksheet(sheetname)
+
+    #update the first sheet with df, starting at cell B2. 
+    sheet.set_dataframe(df,(0,0))
     #df.to_csv(f'./review_session_data_{state.genre_selected}_{state.user_code}.csv')
 
 def init_states():
@@ -157,13 +170,17 @@ def main():
         if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             st.session_state.state = 'select'
             empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1])
+
     if st.session_state.state == 'select':
         h = st.empty()
         h.header("Select Movie")
         data = pd.DataFrame(st.session_state.shown_instances)[['title', 'link']]
         sel = st.empty()
         selected_indices = sel.selectbox('Select Movie you would like to watch today:', data.title)
-        st.session_state['selected'] = selected_indices
+
+        mid = movies[movies['title'] == selected_indices].movieId.iloc[0]
+        st.session_state['selected'] = mid
+
         tab = st.empty()
         tab.table(data=data)
         neb = st.empty()
