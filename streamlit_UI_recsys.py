@@ -142,6 +142,7 @@ def main():
             instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
 
             if 'film_info' not in st.session_state:
+                st.write(instances)
                 st.session_state['film_info'] = [get_film_info(instances=instances)]
     if st.session_state.state == 'review_items':
         instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
