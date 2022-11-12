@@ -53,7 +53,7 @@ def save_data(state):
     
     sh = gc.open('Study_results_recsys')
 
-    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}"
+    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state.rew_idx}"
     sheet = sh.add_worksheet(sheetname)
 
     sheet.set_dataframe(df,(0,0))
@@ -137,6 +137,7 @@ def main():
     init_states()   
     set_explanations()   
     movies, sequences, idx = read_movies()
+    st.session_state.rew_idx = idx
     unique_genres = list(np.unique(np.array([item for sublist in movies["genrelist"].apply(lambda x: eval(x)) for item in sublist])))
     if st.session_state.state == "select_genre":
         head = st.empty()
@@ -240,7 +241,7 @@ def main():
         h = st.empty()
         h.header("Select Movie")
         if len(st.session_state.shown_instances) == 0:
-            st.write("You have to review movies before you can make your decision. Please refresh the page and start again")
+            st.write("You have to review movies before you can make your decision. Please refresh the page to start again.")
         else:
             data = pd.DataFrame(st.session_state.shown_instances)[['title', 'link']]
         
