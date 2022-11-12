@@ -4,11 +4,21 @@ import pandas as pd
 import webbrowser
 import random
 import re, requests
+import json
 import os, sys
 import time
 import pygsheets
 import tempfile
 import json
+from bs4 import BeautifulSoup as Bs
+import urllib.request
+import requests
+
+def download_url(url):
+    opener = urllib.request.FancyURLopener({})
+    f = opener.open(url).read()
+
+    return f
 
 def _google_creds_as_file():
     temp = tempfile.NamedTemporaryFile()
@@ -48,6 +58,7 @@ def save_data(state):
     df['timestamps'] = state.timestamps
     df['user'] = state.user_code
     df['ratings'] = state.last_decisions
+    df['film_info'] = state.film_info[:-1]
     
     #open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
     sh = gc.open('Study_results_recsys')
@@ -99,23 +110,42 @@ def prepare_data(movies, genre):
 def set_explanations():
     st.header('Instructions')
     explanation_placeholder = st.empty()
-    explanation_placeholder.write(f'Please browse through movies until you find a movie you would like to watch today. Please check out the link at "View the Trailer and get more information." to get more information about the movie and/or watch the trailer.For each movie you see, please rate it from 1-5 stars, depending on how appealing it is for you to watch.(1: I\'m probably not going to watch it - 5: I would love to watch it)')
+    explanation_placeholder.write(f'Please browse through movies until you find a movie you would like to watch today. Please check out the link at "View the Trailer and get more information." to get more information about the movie and/or watch the trailer. For each movie you check out, please rate it from 1-10 stars, depending on how appealing it is for you to watch.(1: I do not want to watch it - 10: I would love to watch it)')
     explanation_placeholder_3 = st.empty()
-    s = 'When you found a movie you like to watch today, please click Done. You will then be able to select your choice from all previous options reviewed. Note that you can choose any of the movies you reviewed before.'
-    explanation_placeholder_3.write(s)
+    s = '**When you found a movie you like to watch today, please click Next to record your rating and then click Done.** You will then be able to select your choice from all previous options reviewed. Note that you can choose any of the movies you reviewed before.'
+    explanation_placeholder_3.markdown(s)
 
 def empty_widgets(widgets):
     for widget in widgets:
         widget.empty()
+
+def get_film_info(instances):
+    omdbapi = st.secrets['omdbapikey']
+    curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
+    id = instances.imdbId.loc[curr_idx]
+    if (isinstance(id, pd.Series)):
+        id = id.iloc[0]
+    id_formatted = ("tt"+str(id)).replace("tt0", 'tt')
+    query = {'i': id_formatted, 'plot':'full'}
+    response = requests.get(f'http://www.omdbapi.com/?apikey={omdbapi}&', params=query)
+    film_info = response.json()
+    return film_info
+
 @st.cache
 def read_movies():
-    movies = pd.read_csv('./data.csv')[0:250].drop(columns=["Unnamed: 0"]).sample(frac=1).reset_index(drop=True)
-    return movies 
+    f = open('all.json')
+    data = json.load(f)
+    movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
+    movies.index = movies.movieId
+    idx = random.randint(0,10)
+    movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt"))
+    return movies, data, idx
+
 def main():   
     st.set_page_config(layout="wide")
     init_states()   
     set_explanations()   
-    movies = read_movies()
+    movies, sequences, idx = read_movies()
     unique_genres = list(np.unique(np.array([item for sublist in movies["genrelist"].apply(lambda x: eval(x)) for item in sublist])))
     if st.session_state.state == "select_genre":
         head = st.empty()
@@ -123,26 +153,51 @@ def main():
         genre = st.empty()
         g_sel = genre.selectbox('Please select a movie genre you like from the following:', unique_genres)
         next_b = st.empty()
+        selected_sequence = sequences[g_sel][idx]
         st.session_state.genre_selected = g_sel
+        st.session_state.selected_sequence = selected_sequence
+        instances = movies.loc[selected_sequence]
         if next_b.button("Proceed"):
             empty_widgets([genre, next_b, head])
             st.session_state.state = "review_items"
+            curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
+            st.session_state['link'] = instances.link.loc[curr_idx]
+            instances = movies.loc[st.session_state.selected_sequence] 
+
+            if 'film_info' not in st.session_state:
+                st.session_state['film_info'] = [get_film_info(instances=instances)]
     if st.session_state.state == 'review_items':
-        instances = prepare_data(movies, st.session_state.genre_selected)    
-        curr_idx = st.session_state['action_idx']
+        #instances = prepare_data(movies, st.session_state.genre_selected)   
+        instances = movies.loc[st.session_state.selected_sequence] 
+        curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
         rev = st.empty()
         rev.header('Review & Rate Movie')
         tit = st.empty()
         tit.title(f'{instances["title"].loc[curr_idx]}')
-        bp = st.empty()
         st.session_state['link'] = instances.link.loc[curr_idx]
-        if bp.button('View the Trailer and get more information.'):
-            webbrowser.open_new_tab(st.session_state['link'])
-            st.session_state.link_clicked.append(curr_idx)
-        #content = download_url(st.session_state['link'])
-        #st.components.v1.html(content, width=None, height=400, scrolling=True)
+    
+        col0, col4 = st.columns([0.15,1]) 
+        with col0: 
+            image = st.empty()
+            image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
+        with col4:
+            plot = st.empty()
+            Director = st.empty()
+            Writer = st.empty()
+            Actors = st.empty()
+            Runtime = st.empty()
+            plot.markdown(f"**Plot:** {st.session_state['film_info'][st.session_state['action_idx']]['Plot']}")
+            Director.markdown(f"**Director:** {st.session_state['film_info'][st.session_state['action_idx']]['Director']}")
+            Writer.markdown(f"**Writer:** {st.session_state['film_info'][st.session_state['action_idx']]['Writer']}")
+            Actors.markdown(f"**Actors:** {st.session_state['film_info'][st.session_state['action_idx']]['Actors']}")
+            Runtime.markdown(f"**Runtime:** {st.session_state['film_info'][st.session_state['action_idx']]['Runtime']}")
+            bp = st.empty()
+            if bp.button('View the Trailer and get more information.'):
+                webbrowser.open_new_tab(st.session_state['link'])
+                st.session_state.link_clicked.append(st.session_state['action_idx'])
+        #st.components.v1.html(pages[st.session_state['link']], width=None, height=400, scrolling=True)
         slid = st.empty()
-        slider_val = slid.slider('Choose a rating from 1 to 5',1,5) 
+        slider_val = slid.slider('Choose a rating from 1 to 10',1,10) 
         col1, col2, col3= st.columns([2,0.8,2]) 
         with col1: 
             st.empty()
@@ -153,23 +208,40 @@ def main():
             if slider_val==3: md.markdown(":star::star::star:") 
             if slider_val==4: md.markdown(":star::star::star::star:") 
             if slider_val==5: md.markdown(":star::star::star::star::star:") 
+            if slider_val==6: md.markdown(":star::star::star::star::star::star:") 
+            if slider_val==7: md.markdown(":star::star::star::star::star::star::star:") 
+            if slider_val==8: md.markdown(":star::star::star::star::star::star::star::star:") 
+            if slider_val==9: md.markdown(":star::star::star::star::star::star::star::star::star:") 
+            if slider_val==10: md.markdown(":star::star::star::star::star::star::star::star::star::star:") 
         with col3: 
             st.empty()
         button_placeholder_1 = st.empty()
         if button_placeholder_1.button("Next"):
+            instances = movies.loc[st.session_state.selected_sequence] 
             st.session_state.last_decisions.append(slider_val)
             st.session_state.shown_instances.append(instances.loc[curr_idx])
             st.session_state.timestamps.append(time.time())
+
             st.session_state['action_idx'] += + 1
-            curr_idx = st.session_state['action_idx']
+            curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
             st.session_state['link'] = instances.link.loc[curr_idx]
+            st.session_state['film_info'].append(get_film_info(instances=instances))
+            
             tit.title(f'{instances["title"].loc[curr_idx]}')
+            plot.markdown(f"**Plot:** {st.session_state['film_info'][st.session_state['action_idx']]['Plot']}")
+            Director.markdown(f"**Director:** {st.session_state['film_info'][st.session_state['action_idx']]['Director']}")
+            Writer.markdown(f"**Writer:** {st.session_state['film_info'][st.session_state['action_idx']]['Writer']}")
+            Actors.markdown(f"**Actors:** {st.session_state['film_info'][st.session_state['action_idx']]['Actors']}")
+            Runtime.markdown(f"**Runtime:** {st.session_state['film_info'][st.session_state['action_idx']]['Runtime']}")
+            image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
+
             
 
         button_placeholder_2 = st.empty()
         if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             st.session_state.state = 'select'
             empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1])
+            empty_widgets([plot, Director, Actors, Writer, Runtime, image])
 
     if st.session_state.state == 'select':
         h = st.empty()
