@@ -3,22 +3,12 @@ import numpy as np
 import pandas as pd 
 import webbrowser
 import random
-import re, requests
 import json
-import os, sys
 import time
 import pygsheets
 import tempfile
 import json
-from bs4 import BeautifulSoup as Bs
-import urllib.request
 import requests
-
-def download_url(url):
-    opener = urllib.request.FancyURLopener({})
-    f = opener.open(url).read()
-
-    return f
 
 def _google_creds_as_file():
     temp = tempfile.NamedTemporaryFile()
