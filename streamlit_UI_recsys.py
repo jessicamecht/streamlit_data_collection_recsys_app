@@ -126,7 +126,11 @@ def read_movies():
     idx = random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt"))
     return movies, data, idx
-
+def nav_to(url):
+    nav_script = """
+        <meta http-equiv="refresh" content="0; url='%s'">
+    """ % (url)
+    st.write(nav_script, unsafe_allow_html=True)
 def main():   
     st.set_page_config(layout="wide")
     init_states()   
@@ -179,7 +183,8 @@ def main():
             Runtime.markdown(f"**Runtime:** {st.session_state['film_info'][st.session_state['action_idx']]['Runtime']}")
             bp = st.empty()
             if bp.button('View the Trailer and get more information.'):
-                webbrowser.open_new_tab(st.session_state['link'])
+                #webbrowser.open_new_tab(st.session_state['link'])
+                nav_to(st.session_state['link'])
                 st.session_state.link_clicked.append(st.session_state['action_idx'])
         #st.components.v1.html(pages[st.session_state['link']], width=None, height=400, scrolling=True)
         slid = st.empty()
