@@ -155,6 +155,8 @@ def main():
         col0, col4 = st.columns([0.2,1]) 
         with col0: 
             image = st.empty()
+            st.write(f"{st.session_state['film_info']}")
+            st.write(f"{st.session_state['action_idx']}")
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
         with col4:
             plot = st.empty()
