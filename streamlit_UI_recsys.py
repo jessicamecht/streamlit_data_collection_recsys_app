@@ -83,17 +83,6 @@ def init_states():
     if 'genre_selected' not in st.session_state:
         st.session_state['genre_selected'] = ""
 
-@st.cache
-def prepare_data(movies, genre):
-    filter = movies.genrelist.apply(lambda x: genre in x)
-    filtered_movies_genre = movies[filter]
-    filtered_movies_not_genre = movies[filter == 0]
-    genre_sample = filtered_movies_genre[0:15]
-    not_genre_sample = filtered_movies_not_genre[0:35]
-    df = pd.concat((genre_sample, not_genre_sample), axis=0)
-    instances = df
-    return instances
-
 def set_explanations():
     st.header('Instructions')
     explanation_placeholder = st.empty()
@@ -127,11 +116,7 @@ def read_movies():
     idx = random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt"))
     return movies, data, idx
-def nav_to(url):
-    nav_script = """
-        <meta http-equiv="refresh" target="_blank" content="0; url='%s'">
-    """ % (url)
-    st.write(nav_script, unsafe_allow_html=True)
+
 def main():   
     st.set_page_config(layout="wide")
     init_states()   
@@ -159,7 +144,6 @@ def main():
             if 'film_info' not in st.session_state:
                 st.session_state['film_info'] = [get_film_info(instances=instances)]
     if st.session_state.state == 'review_items':
-        #instances = prepare_data(movies, st.session_state.genre_selected)   
         instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
         curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
         rev = st.empty()
