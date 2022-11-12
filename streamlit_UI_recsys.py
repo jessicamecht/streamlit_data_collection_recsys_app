@@ -127,7 +127,11 @@ def read_movies():
     idx = random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt"))
     return movies, data, idx
-
+def nav_to(url):
+    nav_script = """
+        <meta http-equiv="refresh" target="_blank" content="0; url='%s'">
+    """ % (url)
+    st.write(nav_script, unsafe_allow_html=True)
 def main():   
     st.set_page_config(layout="wide")
     init_states()   
@@ -179,13 +183,11 @@ def main():
             Actors.markdown(f"**Actors:** {st.session_state['film_info'][st.session_state['action_idx']]['Actors']}")
             Runtime.markdown(f"**Runtime:** {st.session_state['film_info'][st.session_state['action_idx']]['Runtime']}")
             bp = st.empty()
-            
-            if bp.button('View the Trailer and get more information.'):
-                #js = f"window.open('{st.session_state['link']}')"  # New tab or window
-                st.markdown(st.session_state['link'], unsafe_allow_html=True)
-                #html = '<img src onerror="{}">'.format(js)
-                #div = Div(text=html)
-                #st.bokeh_chart(div)
+            mk = st.empty()
+            if bp.button(f"View the Trailer and get more information."):
+                stri = f"Please Click: {st.session_state['link']}"
+                mk.markdown(stri)
+    
                 st.session_state.link_clicked.append(st.session_state['action_idx'])
         slid = st.empty()
         slider_val = slid.slider('Choose a rating from 1 to 10',1,10) 
@@ -231,25 +233,29 @@ def main():
         button_placeholder_2 = st.empty()
         if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             st.session_state.state = 'select'
-            empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1])
+            empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1, mk])
             empty_widgets([plot, Director, Actors, Writer, Runtime, image])
 
     if st.session_state.state == 'select':
         h = st.empty()
         h.header("Select Movie")
-        data = pd.DataFrame(st.session_state.shown_instances)[['title', 'link']]
-        sel = st.empty()
-        selected_indices = sel.selectbox('Select Movie you would like to watch today:', data.title)
+        if len(st.session_state.shown_instances) == 0:
+            st.write("You have to review movies before you can make your decision. Please refresh the page and start again")
+        else:
+            data = pd.DataFrame(st.session_state.shown_instances)[['title', 'link']]
+        
+            sel = st.empty()
+            selected_indices = sel.selectbox('Select Movie you would like to watch today:', data.title)
 
-        mid = movies[movies['title'] == selected_indices].movieId.iloc[0]
-        st.session_state['selected'] = mid
+            mid = movies[movies['title'] == selected_indices].movieId.iloc[0]
+            st.session_state['selected'] = mid
 
-        tab = st.empty()
-        tab.table(data=data)
-        neb = st.empty()
-        if neb.button("Finish"):
-            st.session_state.state = 'finish'
-            empty_widgets([tab, sel])
+            tab = st.empty()
+            tab.table(data=data)
+            neb = st.empty()
+            if neb.button("Finish"):
+                st.session_state.state = 'finish'
+                empty_widgets([tab, sel])
 
     if st.session_state.state == 'finish':
             empty_widgets([neb, h])
