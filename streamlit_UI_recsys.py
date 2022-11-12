@@ -148,19 +148,19 @@ def main():
         selected_sequence = sequences[g_sel][idx]
         st.session_state.genre_selected = g_sel
         st.session_state.selected_sequence = selected_sequence
-        instances = movies.loc[selected_sequence]
+        instances = movies.loc[selected_sequence].drop_duplicates(subset="imdbId")
         if next_b.button("Proceed"):
             empty_widgets([genre, next_b, head])
             st.session_state.state = "review_items"
             curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
             st.session_state['link'] = instances.link.loc[curr_idx]
-            instances = movies.loc[st.session_state.selected_sequence] 
+            instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
 
             if 'film_info' not in st.session_state:
                 st.session_state['film_info'] = [get_film_info(instances=instances)]
     if st.session_state.state == 'review_items':
         #instances = prepare_data(movies, st.session_state.genre_selected)   
-        instances = movies.loc[st.session_state.selected_sequence] 
+        instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
         curr_idx = st.session_state.selected_sequence[st.session_state['action_idx']]
         rev = st.empty()
         rev.header('Review & Rate Movie')
@@ -211,7 +211,7 @@ def main():
             st.empty()
         button_placeholder_1 = st.empty()
         if button_placeholder_1.button("Next"):
-            instances = movies.loc[st.session_state.selected_sequence] 
+            instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
             st.session_state.last_decisions.append(slider_val)
             st.session_state.shown_instances.append(instances.loc[curr_idx])
             st.session_state.timestamps.append(time.time())
