@@ -50,16 +50,12 @@ def save_data(state):
     df['ratings'] = state.last_decisions
     df['film_info'] = state.film_info[:-1]
     
-    #open the google spreadsheet (where 'PY to Gsheet Test' is the name of my sheet)
     sh = gc.open('Study_results_recsys')
 
-    #select the first sheet 
     sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}"
     sheet = sh.add_worksheet(sheetname)
 
-    #update the first sheet with df, starting at cell B2. 
     sheet.set_dataframe(df,(0,0))
-    #df.to_csv(f'./review_session_data_{state.genre_selected}_{state.user_code}.csv')
 
 def init_states():
     user_code = generate_random_code()
@@ -166,7 +162,7 @@ def main():
         tit.title(f'{instances["title"].loc[curr_idx]}')
         st.session_state['link'] = instances.link.loc[curr_idx]
     
-        col0, col4 = st.columns([0.15,1]) 
+        col0, col4 = st.columns([0.2,1]) 
         with col0: 
             image = st.empty()
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
