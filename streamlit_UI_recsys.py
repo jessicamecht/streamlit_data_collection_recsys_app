@@ -5,6 +5,7 @@ import webbrowser
 import random
 import json
 import time
+from bokeh.models.widgets import Div
 import pygsheets
 import tempfile
 import json
@@ -126,11 +127,7 @@ def read_movies():
     idx = random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt"))
     return movies, data, idx
-def nav_to(url):
-    nav_script = """
-        <meta http-equiv="refresh" content="0; url='%s'">
-    """ % (url)
-    st.write(nav_script, unsafe_allow_html=True)
+
 def main():   
     st.set_page_config(layout="wide")
     init_states()   
@@ -182,11 +179,13 @@ def main():
             Actors.markdown(f"**Actors:** {st.session_state['film_info'][st.session_state['action_idx']]['Actors']}")
             Runtime.markdown(f"**Runtime:** {st.session_state['film_info'][st.session_state['action_idx']]['Runtime']}")
             bp = st.empty()
+            
             if bp.button('View the Trailer and get more information.'):
-                #webbrowser.open_new_tab(st.session_state['link'])
-                nav_to(st.session_state['link'])
+                js = f"window.open('{st.session_state['link']}')"  # New tab or window
+                html = '<img src onerror="{}">'.format(js)
+                div = Div(text=html)
+                st.bokeh_chart(div)
                 st.session_state.link_clicked.append(st.session_state['action_idx'])
-        #st.components.v1.html(pages[st.session_state['link']], width=None, height=400, scrolling=True)
         slid = st.empty()
         slider_val = slid.slider('Choose a rating from 1 to 10',1,10) 
         col1, col2, col3= st.columns([2,0.8,2]) 
