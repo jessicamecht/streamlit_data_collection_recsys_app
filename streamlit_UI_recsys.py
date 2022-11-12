@@ -143,7 +143,6 @@ def main():
             instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
 
             if 'film_info' not in st.session_state:
-                st.write(instances)
                 st.session_state['film_info'] = [get_film_info(instances=instances)]
     if st.session_state.state == 'review_items':
         instances = movies.loc[st.session_state.selected_sequence].drop_duplicates(subset="imdbId")
@@ -157,8 +156,6 @@ def main():
         col0, col4 = st.columns([0.2,1]) 
         with col0: 
             image = st.empty()
-            st.write(f"{st.session_state['film_info']}")
-            st.write(f"{st.session_state['action_idx']}")
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
         with col4:
             plot = st.empty()
