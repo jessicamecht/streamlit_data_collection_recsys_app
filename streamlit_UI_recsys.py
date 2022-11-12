@@ -101,7 +101,8 @@ def get_film_info(instances):
     id = instances.imdbId.loc[curr_idx]
     if (isinstance(id, pd.Series)):
         id = id.iloc[0]
-    id_formatted = ("tt"+str(id)).replace("tt0", 'tt')
+    id_formatted = ("tt"+str(id))
+    id_formatted = id_formatted.replace("tt0", 'tt') if len(str(id)) != 7 else id_formatted
     query = {'i': id_formatted, 'plot':'full'}
     response = requests.get(f'http://www.omdbapi.com/?apikey={omdbapi}&', params=query)
     film_info = response.json()
@@ -114,7 +115,7 @@ def read_movies():
     movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
     movies.index = movies.movieId
     idx = random.randint(0,10)
-    movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt"))
+    movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt") if len(str(x.split("tt")[-1])) != 8 else x)
     return movies, data, idx
 
 def main():   
