@@ -181,10 +181,11 @@ def main():
             bp = st.empty()
             
             if bp.button('View the Trailer and get more information.'):
-                js = f"window.open('{st.session_state['link']}')"  # New tab or window
-                html = '<img src onerror="{}">'.format(js)
-                div = Div(text=html)
-                st.bokeh_chart(div)
+                #js = f"window.open('{st.session_state['link']}')"  # New tab or window
+                st.markdown(st.session_state['link'], unsafe_allow_html=True)
+                #html = '<img src onerror="{}">'.format(js)
+                #div = Div(text=html)
+                #st.bokeh_chart(div)
                 st.session_state.link_clicked.append(st.session_state['action_idx'])
         slid = st.empty()
         slider_val = slid.slider('Choose a rating from 1 to 10',1,10) 
