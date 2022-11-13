@@ -114,7 +114,7 @@ def read_movies():
     data = json.load(f)
     movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
     movies.index = movies.movieId
-    idx = random.randint(0,10)
+    idx = 3#random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt") if len(str(x.split("tt")[-1])) != 8 else x)
     return movies, data, idx
 
@@ -218,6 +218,7 @@ def main():
 
         button_placeholder_2 = st.empty()
         if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
+            
             st.session_state.state = 'select'
             empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1, mk])
             empty_widgets([plot, Director, Actors, Writer, Runtime, image])
@@ -237,7 +238,7 @@ def main():
             st.session_state['selected'] = mid
 
             tab = st.empty()
-            tab.table(data=data)
+            tab.table(data=data.reset_index(drop=True))
             neb = st.empty()
             if neb.button("Finish"):
                 st.session_state.state = 'finish'
