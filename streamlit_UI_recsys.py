@@ -215,7 +215,7 @@ def main():
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
 
             
-        if st.session_state['action_idx'] > 10:
+        if st.session_state['action_idx'] >= 10:
             button_placeholder_2 = st.empty()
             if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             
