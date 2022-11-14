@@ -86,7 +86,7 @@ def init_states():
 def set_explanations():
     st.header('Instructions')
     explanation_placeholder = st.empty()
-    explanation_placeholder.write(f'Please browse through movies until you find a movie you would like to watch today. Please check out the link at "View the Trailer and get more information." to get more information about the movie and/or watch the trailer. For each movie you check out, please rate it from 1-10 stars, depending on how appealing it is for you to watch.(1: I do not want to watch it - 10: I would love to watch it)')
+    explanation_placeholder.write(f'Please browse through movies until you find a movie you would like to watch today. Please check out the link at "View the Trailer and get more information." to get more information about the movie and/or watch the trailer. For each movie you check out, please rate it from 1-10 stars, depending on how appealing it is for you to watch.(1: I do not want to watch it - 10: I would love to watch it). Note that you have to review at least 5 movies.')
     explanation_placeholder_3 = st.empty()
     s = '**When you found a movie you like to watch today, please click Next to record your rating and then click Done.** You will then be able to select your choice from all previous options reviewed. Note that you can choose any of the movies you reviewed before.'
     explanation_placeholder_3.markdown(s)
@@ -215,8 +215,8 @@ def main():
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
 
             
-
-        button_placeholder_2 = st.empty()
+        if st.session_state['action_idx'] > 5:
+            button_placeholder_2 = st.empty()
         if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             
             st.session_state.state = 'select'
