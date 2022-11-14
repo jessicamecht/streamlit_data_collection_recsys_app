@@ -53,7 +53,7 @@ def save_data(state):
     
     sh = gc.open('Study_results_recsys')
 
-    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state.rew_idx}"
+    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state.rew_idx}_al5"
     sheet = sh.add_worksheet(sheetname)
 
     sheet.set_dataframe(df,(0,0))
