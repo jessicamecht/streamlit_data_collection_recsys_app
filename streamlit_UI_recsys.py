@@ -217,11 +217,11 @@ def main():
             
         if st.session_state['action_idx'] > 5:
             button_placeholder_2 = st.empty()
-        if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
+            if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             
-            st.session_state.state = 'select'
-            empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1, mk])
-            empty_widgets([plot, Director, Actors, Writer, Runtime, image])
+                st.session_state.state = 'select'
+                empty_widgets([slid, rev, bp, tit, md, button_placeholder_2, button_placeholder_1, mk])
+                empty_widgets([plot, Director, Actors, Writer, Runtime, image])
 
     if st.session_state.state == 'select':
         h = st.empty()
