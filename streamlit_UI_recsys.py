@@ -53,7 +53,7 @@ def save_data(state):
     
     sh = gc.open('Study_results_recsys')
 
-    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state.rew_idx}_al5"
+    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state.rew_idx}_al10"
     sheet = sh.add_worksheet(sheetname)
 
     sheet.set_dataframe(df,(0,0))
@@ -86,7 +86,7 @@ def init_states():
 def set_explanations():
     st.header('Instructions')
     explanation_placeholder = st.empty()
-    explanation_placeholder.write(f'Please browse through movies until you find a movie you would like to watch today. Please check out the link at "View the Trailer and get more information." to get more information about the movie and/or watch the trailer. For each movie you check out, please rate it from 1-10 stars, depending on how appealing it is for you to watch.(1: I do not want to watch it - 10: I would love to watch it). Note that you have to review at least 5 movies.')
+    explanation_placeholder.write(f'Please browse through movies until you find a movie you would like to watch today. Please check out the link at "View the Trailer and get more information." to get more information about the movie and/or watch the trailer. For each movie you check out, please rate it from 1-10 stars, depending on how appealing it is for you to watch.(1: I do not want to watch it - 10: I would love to watch it). Note that you have to review at least 10 movies.')
     explanation_placeholder_3 = st.empty()
     s = '**When you found a movie you like to watch today, please click Next to record your rating and then click Done.** You will then be able to select your choice from all previous options reviewed. Note that you can choose any of the movies you reviewed before.'
     explanation_placeholder_3.markdown(s)
@@ -114,7 +114,7 @@ def read_movies():
     data = json.load(f)
     movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
     movies.index = movies.movieId
-    idx = 5#random.randint(0,10)
+    idx = 6#random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt") if len(str(x.split("tt")[-1])) != 8 else x)
     return movies, data, idx
 
@@ -215,7 +215,7 @@ def main():
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
 
             
-        if st.session_state['action_idx'] > 5:
+        if st.session_state['action_idx'] > 10:
             button_placeholder_2 = st.empty()
             if len(instances) - 1 == st.session_state['action_idx'] or button_placeholder_2.button("Done"):
             
