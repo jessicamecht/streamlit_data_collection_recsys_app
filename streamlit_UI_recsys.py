@@ -114,7 +114,7 @@ def read_movies():
     data = json.load(f)
     movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
     movies.index = movies.movieId
-    idx = 1#random.randint(0,10)
+    idx = 8#random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt") if len(str(x.split("tt")[-1])) != 8 else x)
     return movies, data, idx
 
