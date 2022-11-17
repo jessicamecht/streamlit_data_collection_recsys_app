@@ -103,7 +103,10 @@ def get_film_info(instances):
     if (isinstance(id, pd.Series)):
         id = id.iloc[0]
     id_formatted = ("tt"+str(id))
-    id_formatted = id_formatted.replace("tt0", 'tt') if len(str(id)) != 7 else id_formatted
+    while len(id_formatted) < 9:
+        id_formatted = id_formatted.replace("tt", "tt0")
+    print(id_formatted, 'id_formatted', id)
+    id_formatted = id_formatted.replace("tt0", 'tt') if len(str(id_formatted)) != 9 else id_formatted
     query = {'i': id_formatted, 'plot':'full'}
     response = requests.get(f'http://www.omdbapi.com/?apikey={omdbapi}&', params=query)
     film_info = response.json()
@@ -164,7 +167,8 @@ def main():
             Writer = st.empty()
             Actors = st.empty()
             Runtime = st.empty()
-            plot.markdown(f"**Plot:** {st.session_state['film_info'][st.session_state['action_idx']]['Plot']}")
+            plot_str = st.session_state['film_info'][st.session_state['action_idx']]['Plot']
+            plot.markdown(f"**Plot:** {plot_str}")
             Director.markdown(f"**Director:** {st.session_state['film_info'][st.session_state['action_idx']]['Director']}")
             Writer.markdown(f"**Writer:** {st.session_state['film_info'][st.session_state['action_idx']]['Writer']}")
             Actors.markdown(f"**Actors:** {st.session_state['film_info'][st.session_state['action_idx']]['Actors']}")
@@ -208,6 +212,8 @@ def main():
             st.session_state['film_info'].append(get_film_info(instances=instances))
             
             tit.title(f'{instances["title"].loc[curr_idx]}')
+            print(st.session_state['film_info'][st.session_state['action_idx']].keys(), st.session_state['action_idx'])
+
             plot.markdown(f"**Plot:** {st.session_state['film_info'][st.session_state['action_idx']]['Plot']}")
             Director.markdown(f"**Director:** {st.session_state['film_info'][st.session_state['action_idx']]['Director']}")
             Writer.markdown(f"**Writer:** {st.session_state['film_info'][st.session_state['action_idx']]['Writer']}")
