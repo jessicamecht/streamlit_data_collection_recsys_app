@@ -90,6 +90,7 @@ def set_explanations():
     explanation_placeholder_3 = st.empty()
     s = '**When you found a movie you like to watch today, please click Next to record your rating and then click Done.** You will then be able to select your choice from all previous options reviewed. Note that you can choose any of the movies you reviewed before.'
     explanation_placeholder_3.markdown(s)
+    st.markdown("Please note that your HIT will be rejected if you always rate every item 1 star, or every item the same amount of stars. Please rate the movies fairthfully according to your preferences. We much appreciate it!")
 
 def empty_widgets(widgets):
     for widget in widgets:
