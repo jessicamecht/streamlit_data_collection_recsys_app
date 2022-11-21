@@ -156,7 +156,7 @@ def main():
         tit.title(f'{instances["title"].loc[curr_idx]}')
         st.session_state['link'] = instances.link.loc[curr_idx]
     
-        col0, col4 = st.columns([0.2,1]) 
+        col0, col4 = st.columns([0.2,0.8]) 
         with col0: 
             image = st.empty()
             image.image(st.session_state['film_info'][st.session_state['action_idx']]['Poster'],width=240)
