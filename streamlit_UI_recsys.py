@@ -105,7 +105,6 @@ def get_film_info(instances):
     id_formatted = ("tt"+str(id))
     while len(id_formatted) < 9:
         id_formatted = id_formatted.replace("tt", "tt0")
-    print(id_formatted, 'id_formatted', id)
     id_formatted = id_formatted.replace("tt0", 'tt') if len(str(id_formatted)) != 9 else id_formatted
     query = {'i': id_formatted, 'plot':'full'}
     response = requests.get(f'http://www.omdbapi.com/?apikey={omdbapi}&', params=query)
@@ -118,7 +117,7 @@ def read_movies():
     data = json.load(f)
     movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
     movies.index = movies.movieId
-    idx = 8#random.randint(0,10)
+    idx = 9#random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt") if len(str(x.split("tt")[-1])) != 8 else x)
     return movies, data, idx
 
@@ -212,7 +211,6 @@ def main():
             st.session_state['film_info'].append(get_film_info(instances=instances))
             
             tit.title(f'{instances["title"].loc[curr_idx]}')
-            print(st.session_state['film_info'][st.session_state['action_idx']].keys(), st.session_state['action_idx'])
 
             plot.markdown(f"**Plot:** {st.session_state['film_info'][st.session_state['action_idx']]['Plot']}")
             Director.markdown(f"**Director:** {st.session_state['film_info'][st.session_state['action_idx']]['Director']}")
