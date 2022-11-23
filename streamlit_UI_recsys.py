@@ -5,7 +5,6 @@ import webbrowser
 import random
 import json
 import time
-from bokeh.models.widgets import Div
 import pygsheets
 import tempfile
 import json
