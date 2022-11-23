@@ -52,13 +52,15 @@ def save_data(state):
     
     sh = gc.open('Study_results_recsys')
 
-    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state.rew_idx}_al10"
+    sheetname = f"{state.genre_selected}_{state.user_code}_{state.selected}_{st.session_state['rn']}_al10"
     sheet = sh.add_worksheet(sheetname)
 
     sheet.set_dataframe(df,(0,0))
 
 def init_states():
     user_code = generate_random_code()
+    if "rn" not in st.session_state:
+        st.session_state["rn"] = random.randint(11,39)
     if 'state' not in st.session_state:
         st.session_state['state'] = 'select_genre'
     if 'link_clicked' not in st.session_state:
@@ -116,16 +118,15 @@ def read_movies():
     data = json.load(f)
     movies = pd.read_csv('./data.csv').drop(columns=["Unnamed: 0"]).drop_duplicates(subset="imdbId")
     movies.index = movies.movieId
-    idx = 10#random.randint(0,10)
     movies['link'] = movies['link'].apply(lambda x: x.replace('tt0', "tt").replace('tt00', "tt") if len(str(x.split("tt")[-1])) != 8 else x)
-    return movies, data, idx
+    return movies, data
 
 def main():   
     st.set_page_config(layout="wide")
     init_states()   
     set_explanations()   
-    movies, sequences, idx = read_movies()
-    st.session_state.rew_idx = idx
+    movies, sequences = read_movies()
+    idx = st.session_state['rn']
     unique_genres = list(np.unique(np.array([item for sublist in movies["genrelist"].apply(lambda x: eval(x)) for item in sublist])))
     if st.session_state.state == "select_genre":
         head = st.empty()
